@@ -39,6 +39,10 @@ const modifierName = (i: number) => {
 const isModifierKey = (i: number) => {
   return [3, 4, 7, 8, 12].includes(i);
 };
+
+const isSpecialKey = (i: number) => {
+  return [2, 53, 55, 56].includes(i);
+};
 </script>
 
 <template>
@@ -57,7 +61,7 @@ const isModifierKey = (i: number) => {
       />
 
       <CharButton
-        v-else
+        v-else-if="!isSpecialKey(n)"
         :idx="n"
         v-model="keyboardState[currentModifier][n]"
         :style="{

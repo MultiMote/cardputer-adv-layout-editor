@@ -14,6 +14,7 @@ const emit = defineEmits(['update:modelValue'])
     maxlength="1"
     class="cardputer-button"
     :value="modelValue"
+    :placeholder="`${props.idx}`"
     @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"
   />
 </template>
