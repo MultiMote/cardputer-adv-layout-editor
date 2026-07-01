@@ -105,6 +105,8 @@ const totalFilledCount = computed(() => {
     <button @click="saveProject">💾 Save project</button>
     <button @click="loadProject">Load project</button>
   </div>
+
+  <a href="https://github.com/MultiMote/cardputer-adv-layout-editor" class="code-link" target="_blank">Code</a>
 </template>
 
 <style scoped>
@@ -117,5 +119,9 @@ const totalFilledCount = computed(() => {
 .buttons {
   display: flex;
   gap: 8px;
+}
+
+.code-link {
+  margin-top: 2rem;
 }
 </style>
