@@ -49,7 +49,11 @@ const clearLayer = () => {
 };
 
 const saveProject = () => {
-  const jsonText = JSON.stringify(keyboardState.value, null, 2);
+  // Exclude empty layers
+  const filtered = Object.fromEntries(
+    Object.entries(keyboardState.value).filter(([_, val]) => Object.keys(val).length > 0)
+  );
+  const jsonText = JSON.stringify(filtered, null, 2);
   downloadText("cardputer-layout.json", "application/json", jsonText);
 };
 
