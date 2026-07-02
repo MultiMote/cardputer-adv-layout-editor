@@ -12,6 +12,7 @@ const keyboardState = ref<Record<string, Record<number, string>>>({
   "0": {},
 });
 
+const showKeyNumbers = ref<boolean>(false);
 const activeModifiers = ref<number[]>([]);
 
 const currentLayerKey = computed(() => {
@@ -103,10 +104,11 @@ const totalFilledCount = computed(() => {
     <template v-for="(n, i) in 56" :key="i">
       <ModifierButton
         v-if="isModifierKey(n)"
+        @click="toggleModifier(n)"
         :idx="n"
         v-model="keyboardState['0'][n]"
         :active="activeModifiers.includes(n)"
-        @click="toggleModifier(n)"
+        :show-key-number="showKeyNumbers"
         :style="{
           top: `${46.8 + (i % 4) * 13}%`,
           left: `${5.2 + Math.floor(i / 4) * 6.6}%`,
@@ -117,6 +119,8 @@ const totalFilledCount = computed(() => {
         v-else-if="!isSpecialKey(n)"
         :idx="n"
         v-model="keyboardState[currentLayerKey][n]"
+        :base-key="keyboardState['0'][n]"
+        :show-key-number="showKeyNumbers"
         :style="{
           top: `${46.8 + (i % 4) * 13}%`,
           left: `${5.2 + Math.floor(i / 4) * 6.6}%`,
@@ -126,7 +130,12 @@ const totalFilledCount = computed(() => {
   </div>
 
   <div>Layer: {{ layerName }}</div>
+
   <div>Total filled: {{ totalFilledCount }} keys</div>
+  <div>
+    <input type="checkbox" v-model="showKeyNumbers" id="show-key-numbers" name="show-key-numbers" />
+    <label for="show-key-numbers">Show key numbers</label>
+  </div>
 
   <div class="buttons">
     <button @click="clearKeyboard">❌ Clear all</button>
@@ -135,12 +144,7 @@ const totalFilledCount = computed(() => {
     <button @click="loadProject">Load project</button>
   </div>
 
-  <a
-    href="https://github.com/MultiMote/cardputer-adv-layout-editor"
-    class="code-link"
-    target="_blank"
-    >Code</a
-  >
+  <a href="https://github.com/MultiMote/cardputer-adv-layout-editor" class="code-link" target="_blank">Code</a>
 </template>
 
 <style scoped>

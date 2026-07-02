@@ -2,13 +2,14 @@
 const props = defineProps({
   idx: { type: Number, required: true },
   active: { type: Boolean, required: true },
+  showKeyNumber: { type: Boolean },
 })
 
 </script>
 
 <template>
   <button class="modifier-button" :class="{ 'active': props.active }">
-    {{ props.idx }}
+    <span v-if="props.showKeyNumber">{{ props.idx }}</span>
   </button>
 </template>
 
@@ -20,7 +21,7 @@ const props = defineProps({
       border-radius: 8px;
       border: 1px solid #084400;
       background-color: #b8dbb1;
-      color: #858585;
+      color: #686868;
       font-weight: bold;
       cursor: pointer;
       font-size: 1.1rem;
