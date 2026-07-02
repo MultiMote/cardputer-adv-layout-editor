@@ -44,7 +44,7 @@ const emit = defineEmits(["update:modelValue"]);
 .cardputer-input {
   width: 100%;
   height: 100%;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   text-align: center;
   border-radius: 8px;
   border: 1px solid #aaa;

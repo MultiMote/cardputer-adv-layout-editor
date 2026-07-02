@@ -24,7 +24,7 @@ const props = defineProps({
       color: #686868;
       font-weight: bold;
       cursor: pointer;
-      font-size: 1.1rem;
+      font-size: 0.9rem;
       padding: 0;
 
   }
