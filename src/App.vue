@@ -4,23 +4,47 @@ import CharButton from "./components/CharButton.vue";
 import ModifierButton from "./components/ModifierButton.vue";
 import { downloadText, pickAndReadTextFile } from "./utils.ts";
 
-const keyboardState = ref<Record<number, Record<number, string>>>({
-  0: {}, // Base layer
-  3: {}, // Fn layer
-  4: {}, // Ctrl layer
-  7: {}, // Shift layer
-  8: {}, // Opt layer
-  12: {}, // Alt layer
+const maxModifiers = 2;
+const modifierKeys = [3, 4, 7, 8, 12];
+const specialKeys = [2, 53, 55, 56];
+
+const keyboardState = ref<Record<string, Record<number, string>>>({
+  "0": {},
 });
 
-const currentModifier = ref<number>(0);
+const activeModifiers = ref<number[]>([]);
+
+const currentLayerKey = computed(() => {
+  if (activeModifiers.value.length === 0) {
+    return "0";
+  }
+  return [...activeModifiers.value].sort((a, b) => a - b).join("+");
+});
+
+const toggleModifier = (n: number) => {
+  const index = activeModifiers.value.indexOf(n);
+
+  if (index > -1) {
+    activeModifiers.value.splice(index, 1);
+  } else {
+    if (activeModifiers.value.length >= maxModifiers) {
+      return;
+    }
+    activeModifiers.value.push(n);
+  }
+
+  if (!keyboardState.value[currentLayerKey.value]) {
+    keyboardState.value[currentLayerKey.value] = {};
+  }
+};
 
 const clearKeyboard = () => {
-  keyboardState.value = { 0: {}, 3: {}, 4: {}, 7: {}, 8: {}, 12: {} };
+  keyboardState.value = { "0": {} };
+  activeModifiers.value = [];
 };
 
 const clearLayer = () => {
-  keyboardState.value[currentModifier.value] = {};
+  keyboardState.value[currentLayerKey.value] = {};
 };
 
 const saveProject = () => {
@@ -33,30 +57,35 @@ const loadProject = async () => {
   keyboardState.value = JSON.parse(text);
 };
 
-const modifierName = (i: number) => {
-  switch (i) {
-    case 3:
-      return "Fn";
-    case 4:
-      return "Ctrl";
-    case 7:
-      return "Shift";
-    case 8:
-      return "Opt";
-    case 12:
-      return "Alt";
-    default:
-      return "Base";
+const layerName = computed(() => {
+  if (activeModifiers.value.length === 0) {
+    return "Base";
   }
-};
 
-const isModifierKey = (i: number) => {
-  return [3, 4, 7, 8, 12].includes(i);
-};
+  return [...activeModifiers.value]
+    .sort((a, b) => a - b)
+    .map((mod) => {
+      switch (mod) {
+        case 3:
+          return "Fn";
+        case 4:
+          return "Ctrl";
+        case 7:
+          return "Shift";
+        case 8:
+          return "Opt";
+        case 12:
+          return "Alt";
+        default:
+          return "";
+      }
+    })
+    .join("+");
+});
 
-const isSpecialKey = (i: number) => {
-  return [2, 53, 55, 56].includes(i);
-};
+const isModifierKey = (i: number) => modifierKeys.includes(i);
+
+const isSpecialKey = (i: number) => specialKeys.includes(i);
 
 const totalFilledCount = computed(() => {
   let count = 0;
@@ -75,9 +104,9 @@ const totalFilledCount = computed(() => {
       <ModifierButton
         v-if="isModifierKey(n)"
         :idx="n"
-        v-model="keyboardState[0][n]"
-        :active="currentModifier === n"
-        @click="currentModifier = currentModifier === n ? 0 : n"
+        v-model="keyboardState['0'][n]"
+        :active="activeModifiers.includes(n)"
+        @click="toggleModifier(n)"
         :style="{
           top: `${46.8 + (i % 4) * 13}%`,
           left: `${5.2 + Math.floor(i / 4) * 6.6}%`,
@@ -87,7 +116,7 @@ const totalFilledCount = computed(() => {
       <CharButton
         v-else-if="!isSpecialKey(n)"
         :idx="n"
-        v-model="keyboardState[currentModifier][n]"
+        v-model="keyboardState[currentLayerKey][n]"
         :style="{
           top: `${46.8 + (i % 4) * 13}%`,
           left: `${5.2 + Math.floor(i / 4) * 6.6}%`,
@@ -96,7 +125,7 @@ const totalFilledCount = computed(() => {
     </template>
   </div>
 
-  <div>Layer: {{ modifierName(currentModifier) }}</div>
+  <div>Layer: {{ layerName }}</div>
   <div>Total filled: {{ totalFilledCount }} keys</div>
 
   <div class="buttons">
@@ -106,7 +135,12 @@ const totalFilledCount = computed(() => {
     <button @click="loadProject">Load project</button>
   </div>
 
-  <a href="https://github.com/MultiMote/cardputer-adv-layout-editor" class="code-link" target="_blank">Code</a>
+  <a
+    href="https://github.com/MultiMote/cardputer-adv-layout-editor"
+    class="code-link"
+    target="_blank"
+    >Code</a
+  >
 </template>
 
 <style scoped>
