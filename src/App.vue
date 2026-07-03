@@ -4,6 +4,7 @@ import CharButton from "./components/CharButton.vue";
 import ModifierButton from "./components/ModifierButton.vue";
 import { downloadText, pickAndReadTextFile } from "./utils.ts";
 
+const shiftKeyIndex = 7;
 const maxModifiers = 2;
 const modifierKeys = [3, 4, 7, 8, 12];
 const specialKeys = [2, 53, 55, 56];
@@ -101,6 +102,13 @@ const totalFilledCount = computed(() => {
 
   return count;
 });
+
+const findBaseKey = (n: number) => {
+  if (activeModifiers.value.includes(shiftKeyIndex) && keyboardState.value[`${shiftKeyIndex}`][n]) {
+    return keyboardState.value[`${shiftKeyIndex}`][n];
+  }
+  return keyboardState.value["0"][n];
+};
 </script>
 
 <template>
@@ -110,7 +118,6 @@ const totalFilledCount = computed(() => {
         v-if="isModifierKey(n)"
         @click="toggleModifier(n)"
         :idx="n"
-        v-model="keyboardState['0'][n]"
         :active="activeModifiers.includes(n)"
         :show-key-number="showKeyNumbers"
         :style="{
@@ -123,7 +130,7 @@ const totalFilledCount = computed(() => {
         v-else-if="!isSpecialKey(n)"
         :idx="n"
         v-model="keyboardState[currentLayerKey][n]"
-        :base-key="keyboardState['0'][n]"
+        :base-key="findBaseKey(n)"
         :show-key-number="showKeyNumbers"
         :style="{
           top: `${46.8 + (i % 4) * 13}%`,
