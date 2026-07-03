@@ -63,31 +63,27 @@ const loadProject = async () => {
   keyboardState.value = JSON.parse(text);
 };
 
-const layerName = computed(() => {
-  if (activeModifiers.value.length === 0) {
-    return "Base";
-  }
+const getHumanLayerName = (layerKey: string) => {
+  if (layerKey === "0") return "Base";
 
-  return [...activeModifiers.value]
+  return layerKey
+    .split("+")
+    .map(Number)
     .sort((a, b) => a - b)
     .map((mod) => {
       switch (mod) {
-        case 3:
-          return "Fn";
-        case 4:
-          return "Ctrl";
-        case 7:
-          return "Shift";
-        case 8:
-          return "Opt";
-        case 12:
-          return "Alt";
-        default:
-          return "";
+        case 3: return "Fn";
+        case 4: return "Ctrl";
+        case 7: return "Shift";
+        case 8: return "Opt";
+        case 12: return "Alt";
+        default: return "";
       }
     })
     .join("+");
-});
+};
+
+const layerName = computed(() => getHumanLayerName(currentLayerKey.value));
 
 const isModifierKey = (i: number) => modifierKeys.includes(i);
 
@@ -101,6 +97,18 @@ const totalFilledCount = computed(() => {
   });
 
   return count;
+});
+
+const layerBreakdown = computed(() => {
+  return Object.entries(keyboardState.value)
+    .map(([key, layer]) => {
+      return {
+        key,
+        name: getHumanLayerName(key),
+        count: Object.values(layer).filter(Boolean).length
+      };
+    })
+    .filter(layer => layer.count > 0);
 });
 
 const findBaseKey = (n: number) => {
@@ -140,9 +148,20 @@ const findBaseKey = (n: number) => {
     </template>
   </div>
 
-  <div>Layer: {{ layerName }}</div>
+  <div>Current layer: {{ layerName }}</div>
 
-  <div>Total filled: {{ totalFilledCount }} keys</div>
+  <div><strong>Total filled:</strong> {{ totalFilledCount }} keys</div>
+  
+  <div>
+    <ul>
+      <li v-for="layer in layerBreakdown" :key="layer.key"
+      class="breakdown-item"
+      :class="{'current': layerName === layer.name}">
+        {{ layer.name }}: {{ layer.count }} keys
+      </li>
+    </ul>
+  </div>
+
   <div>
     <input type="checkbox" v-model="showKeyNumbers" id="show-key-numbers" name="show-key-numbers" />
     <label for="show-key-numbers">Show key numbers</label>
@@ -172,5 +191,9 @@ const findBaseKey = (n: number) => {
 
 .code-link {
   margin-top: 2rem;
+}
+
+.breakdown-item.current {
+  font-weight: bold;
 }
 </style>
