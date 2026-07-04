@@ -76,7 +76,7 @@ struct layout_layer {
 
 struct layout_data {
   uint8_t layers_count;
-  layout_layer layers[];
+  layout_layer layers[${layersCount}];
 };
 
 layout_data layout = {
