@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import CharButton from "./components/CharButton.vue";
 import ModifierButton from "./components/ModifierButton.vue";
 import { downloadText, pickAndReadTextFile } from "./utils.ts";
-import { generateCCode } from "./codegen.ts";
+import { generateCCode, generateOptimized } from "./codegen.ts";
 
 const shiftKeyIndex = 7;
 const maxModifiers = 2;
@@ -65,6 +65,15 @@ const saveProject = () => {
 const saveProjectC = () => {
   const text = generateCCode(getFilteredData());
   downloadText("cardputer-layout.c", "text/plain", text);
+};
+
+const saveProjectPlain = () => {
+  const langCode = prompt("Enter language code (2 characters)", "en") ?? "";
+
+  if (langCode.length == 2) {
+    const text = generateOptimized(getFilteredData(), langCode);
+    downloadText(`cardputer-layout-${langCode}.txt`, "text/plain", text);
+  }
 };
 
 const loadProject = async () => {
@@ -191,6 +200,7 @@ const findBaseKey = (n: number) => {
     <button @click="loadProject">Load project</button>
     <button @click="saveProject">💾 Save project</button>
     <button @click="saveProjectC">💾 Export C code</button>
+    <button @click="saveProjectPlain">💾 Export optimized</button>
   </div>
 
   <a href="https://github.com/MultiMote/cardputer-adv-layout-editor" class="code-link" target="_blank">Code</a>

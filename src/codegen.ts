@@ -1,4 +1,4 @@
-const getCMask = (layerKey: string) => {
+const getCMaskName = (layerKey: string) => {
   if (layerKey === "0") return "LAYER_MASK_BASE";
 
   return layerKey
@@ -24,6 +24,32 @@ const getCMask = (layerKey: string) => {
     .join(" | ");
 };
 
+const getMaskNameShort = (layerKey: string) => {
+  if (layerKey === "0") return "B";
+
+  return layerKey
+    .split("+")
+    .map(Number)
+    .sort((a, b) => a - b)
+    .map((mod) => {
+      switch (mod) {
+        case 3:
+          return "F";
+        case 4:
+          return "C";
+        case 7:
+          return "S";
+        case 8:
+          return "O";
+        case 12:
+          return "A";
+        default:
+          return "";
+      }
+    })
+    .join("");
+};
+
 export const generateCCode = (data: Record<string, Record<number, string>>): string => {
   const layers: string[] = [];
   const totalKeys = 56;
@@ -32,7 +58,7 @@ export const generateCCode = (data: Record<string, Record<number, string>>): str
 
   for (const layerKey in data) {
     const layer = data[layerKey];
-    const cMask = getCMask(layerKey);
+    const cMask = getCMaskName(layerKey);
     const entries: string[] = [];
 
     for (let n = 1; n <= totalKeys; n++) {
@@ -84,3 +110,18 @@ layout_data layout = {
     .layers = {${layers.join(",\n       ")}}};
 `;
 };
+
+export const generateOptimized = (data: Record<string, Record<number, string>>, langCode: string): string => {
+    const lines: string[] = [];
+    lines.push(`N ${langCode}`);
+
+    for (const layerKey in data) {
+        const keys = data[layerKey];
+        lines.push(`L ${getMaskNameShort(layerKey)}`);
+        for (const key in keys) {
+            lines.push(`K ${key.padStart(2, "0")}=${keys[key]}`);
+        }
+    }
+
+    return lines.join("\n");
+}
