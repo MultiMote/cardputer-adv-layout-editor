@@ -3,13 +3,16 @@ import { computed, ref } from "vue";
 import CharButton from "./components/CharButton.vue";
 import ModifierButton from "./components/ModifierButton.vue";
 import { downloadText, pickAndReadTextFile } from "./utils.ts";
+import { generateCCode } from "./codegen.ts";
 
 const shiftKeyIndex = 7;
 const maxModifiers = 2;
 const modifierKeys = [3, 4, 7, 8, 12];
 const specialKeys = [2, 53, 55, 56];
 
-const keyboardState = ref<Record<string, Record<number, string>>>({
+type LayersDict = Record<string, Record<number, string>>;
+
+const keyboardState = ref<LayersDict>({
   "0": {},
 });
 
@@ -49,13 +52,19 @@ const clearLayer = () => {
   keyboardState.value[currentLayerKey.value] = {};
 };
 
+// Exclude empty layers
+const getFilteredData = (): LayersDict => {
+  return Object.fromEntries(Object.entries(keyboardState.value).filter(([_, val]) => Object.keys(val).length > 0));
+};
+
 const saveProject = () => {
-  // Exclude empty layers
-  const filtered = Object.fromEntries(
-    Object.entries(keyboardState.value).filter(([_, val]) => Object.keys(val).length > 0)
-  );
-  const jsonText = JSON.stringify(filtered, null, 2);
-  downloadText("cardputer-layout.json", "application/json", jsonText);
+  const text = JSON.stringify(getFilteredData(), null, 2);
+  downloadText("cardputer-layout.json", "application/json", text);
+};
+
+const saveProjectC = () => {
+  const text = generateCCode(getFilteredData());
+  downloadText("cardputer-layout.c", "text/plain", text);
 };
 
 const loadProject = async () => {
@@ -72,12 +81,18 @@ const getHumanLayerName = (layerKey: string) => {
     .sort((a, b) => a - b)
     .map((mod) => {
       switch (mod) {
-        case 3: return "Fn";
-        case 4: return "Ctrl";
-        case 7: return "Shift";
-        case 8: return "Opt";
-        case 12: return "Alt";
-        default: return "";
+        case 3:
+          return "Fn";
+        case 4:
+          return "Ctrl";
+        case 7:
+          return "Shift";
+        case 8:
+          return "Opt";
+        case 12:
+          return "Alt";
+        default:
+          return "";
       }
     })
     .join("+");
@@ -105,10 +120,10 @@ const layerBreakdown = computed(() => {
       return {
         key,
         name: getHumanLayerName(key),
-        count: Object.values(layer).filter(Boolean).length
+        count: Object.values(layer).filter(Boolean).length,
       };
     })
-    .filter(layer => layer.count > 0);
+    .filter((layer) => layer.count > 0);
 });
 
 const findBaseKey = (n: number) => {
@@ -151,12 +166,15 @@ const findBaseKey = (n: number) => {
   <div>Current layer: {{ layerName }}</div>
 
   <div><strong>Total filled:</strong> {{ totalFilledCount }} keys</div>
-  
+
   <div>
     <ul>
-      <li v-for="layer in layerBreakdown" :key="layer.key"
-      class="breakdown-item"
-      :class="{'current': layerName === layer.name}">
+      <li
+        v-for="layer in layerBreakdown"
+        :key="layer.key"
+        class="breakdown-item"
+        :class="{ current: layerName === layer.name }"
+      >
         {{ layer.name }}: {{ layer.count }} keys
       </li>
     </ul>
@@ -169,9 +187,10 @@ const findBaseKey = (n: number) => {
 
   <div class="buttons">
     <button @click="clearKeyboard">❌ Clear all</button>
-    <button @click="clearLayer">❌Clear layer</button>
-    <button @click="saveProject">💾 Save project</button>
+    <button @click="clearLayer">❌ Clear layer</button>
     <button @click="loadProject">Load project</button>
+    <button @click="saveProject">💾 Save project</button>
+    <button @click="saveProjectC">💾 Export C code</button>
   </div>
 
   <a href="https://github.com/MultiMote/cardputer-adv-layout-editor" class="code-link" target="_blank">Code</a>
